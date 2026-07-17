@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastmux"
+dynamic = ["version"]
+description = "Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [{name = "fastmux contributors"}]
+keywords = ['nbdev', 'jupyter', 'tmux', 'terminal', 'python']
+classifiers = ["Natural Language :: English", "Intended Audience :: Developers", "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+dependencies = ['fastcore']
+
+[project.urls]
+Repository = "https://github.com/AnswerDotAI/fastmux"
+
+[project.entry-points.nbdev]
+fastmux = "fastmux._modidx:d"
+
+[tool.setuptools.dynamic]
+version = {attr = "fastmux.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["fastmux"]
+
+[tool.nbdev]
+allowed_metadata_keys = ['solveit']
+allowed_cell_metadata_keys = ['solveit_ai']
+recursive = false
+jupyter_hooks = true
+custom_sidebar = false
+
+[tool.chkstyle]
+skip_paths = ["_modidx.py"]
+

@@ -1,0 +1,10 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "fastmux"
+  site-url: "https://AnswerDotAI.github.io/fastmux"
+  description: "Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs"
+  repo-branch: main
+  repo-url: "https://github.com/AnswerDotAI/fastmux"
+
