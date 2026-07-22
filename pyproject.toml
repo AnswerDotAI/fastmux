@@ -20,6 +20,9 @@ Repository = "https://github.com/AnswerDotAI/fastmux"
 [project.entry-points.nbdev]
 fastmux = "fastmux._modidx:d"
 
+[project.entry-points.pyskills]
+fastmux = "fastmux.skill"
+
 [tool.setuptools.dynamic]
 version = {attr = "fastmux.__version__"}
 

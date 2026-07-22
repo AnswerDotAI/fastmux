@@ -344,16 +344,16 @@ def split(
     return Pane.fetch(_tmux(*args))
 
 @patch
-@delegates(Pane.split)
+@delegates(Pane.split, but=['where'])
 def rsplit(self:Pane, **kwargs): return self.split('right', **kwargs)
 @patch
-@delegates(Pane.split)
+@delegates(Pane.split, but=['where'])
 def bsplit(self:Pane, **kwargs): return self.split('below', **kwargs)
 @patch
-@delegates(Pane.split)
+@delegates(Pane.split, but=['where'])
 def lsplit(self:Pane, **kwargs): return self.split('left', **kwargs)
 @patch
-@delegates(Pane.split)
+@delegates(Pane.split, but=['where'])
 def asplit(self:Pane, **kwargs): return self.split('above', **kwargs)
 
 # %% ../nbs/00_core.ipynb #8a009431
@@ -425,6 +425,13 @@ def search(self:Session, pattern, lines=SEARCH_LINES, regex=False, ignore_case=T
     return _search_panes(self.panes, pattern, lines, regex, ignore_case)
 
 # %% ../nbs/00_core.ipynb #387659f2
+def _list_srv(cmd, fields, *flags):
+    "`_list`, with no reachable server treated as empty"
+    try: return _list(cmd, fields, *flags)
+    except TmuxError as e:
+        if 'no server running' in str(e) or 'error connecting to' in str(e): return []
+        raise
+
 class Sessions(L):
     "Sessions shown as an indented session/window/pane tree"
     def __repr__(self):
@@ -434,11 +441,11 @@ class Sessions(L):
 
     def search(self, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
         "Search every pane in every session, rg-style"
-        return _search_panes([Pane(d) for d in _list('list-panes', _pane_f, '-a')], pattern, lines, regex, ignore_case)
+        return _search_panes([Pane(d) for d in _list_srv('list-panes', _pane_f, '-a')], pattern, lines, regex, ignore_case)
 
 def tmux(target=None):
     "All sessions as a tree, or a live handle for `target` (session name, `sess:win`, `sess:win.pane`, or a `$`/`@`/`%` id)"
-    if target is None: return Sessions(Session(d) for d in _list('list-sessions', _sess_f))
+    if target is None: return Sessions(Session(d) for d in _list_srv('list-sessions', _sess_f))
     t = str(target)
     if t.startswith('$'): return Session.fetch(t)
     if t.startswith('@') or (':' in t and '.' not in t): return Window.fetch(_tmux('display-message','-p','-t',t,'#{window_id}'))
