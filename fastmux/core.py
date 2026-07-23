@@ -4,7 +4,7 @@
 
 # %% auto #0
 __all__ = ['SEARCH_LINES', 'TmuxError', 'Session', 'new_session', 'Pane', 'Capture', 'Panes', 'Window', 'Windows', 'SearchMatch',
-           'SearchResults', 'Sessions', 'tmux']
+           'SearchResults', 'Sessions', 'tmux', 'current_pane']
 
 # %% ../nbs/00_core.ipynb #9cc1145d
 from fastcore.utils import *
@@ -40,7 +40,10 @@ def _parse(fields, line):
     for k in fields.keys() & _bools: d[k] = d[k]=='1'
     return d
 
-def _get(fields, target): return _parse(fields, _tmux('display-message','-p','-t',str(target),_fmt(fields)))
+def _get(fields, target):
+    out = _tmux('display-message','-p','-t',str(target),_fmt(fields))
+    if not out.strip('\t'): raise TmuxError(f"can't find {target}")
+    return _parse(fields, out)
 def _list(cmd, fields, *flags): return [_parse(fields, l) for l in _tmux(cmd,*flags,'-F',_fmt(fields)).splitlines()]
 
 # %% ../nbs/00_core.ipynb #cde73486
@@ -172,11 +175,15 @@ def __getitem__(self:Pane, i):
     if not 0 <= i < n: raise IndexError(i)
     return self.capture(i, i+1).text
 
+_seen = {}
+
 @patch
 def display(self:Pane, lines=80, ansi=False):
-    "Capture the last `lines` transcript lines"
+    "Capture the last `lines` transcript lines, recording the pane's last-seen state"
     n = _nlines(self.refresh())
-    return self.capture(max(0, n-lines), ansi=ansi)
+    c = self.capture(max(0, n-lines), ansi=ansi)
+    if not ansi: _seen[self.id, lines] = (c.text, c.n, c.running, c.exit_code)
+    return c
 
 # %% ../nbs/00_core.ipynb #0e1ce944
 def _snapshot(p, lines):
@@ -185,13 +192,12 @@ def _snapshot(p, lines):
 
 @patch
 def poll(self:Pane, wait_ms=0, interval_ms=50, lines=80):
-    "Wait up to `wait_ms` for visible change (returning early if it comes), then capture the last `lines`"
+    "Wait up to `wait_ms` for the pane to differ from its last-seen state (returning at once if it already does), then capture the last `lines`"
     if wait_ms > 0:
-        base = _snapshot(self, lines)
+        base = _seen.get((self.id, lines)) or _snapshot(self, lines)
         deadline = time.monotonic() + wait_ms/1000
-        while time.monotonic() < deadline:
+        while _snapshot(self, lines) == base and time.monotonic() < deadline:
             time.sleep(min(interval_ms/1000, max(0, deadline-time.monotonic())))
-            if _snapshot(self, lines) != base: break
     return self.display(lines)
 
 # %% ../nbs/00_core.ipynb #b429cbcd
@@ -452,3 +458,8 @@ def tmux(target=None):
     if t.startswith('%') or ':' in t or '.' in t: return Pane.fetch(_tmux('display-message','-p','-t',t,'#{pane_id}'))
     _tmux('has-session','-t',f'={t}')  # exact-name existence check
     return Session.fetch(t)
+
+# %% ../nbs/00_core.ipynb #ec382b6b
+def current_pane():
+    "The pane tmux considers current: the caller's own inside tmux, else the active pane of the most recent session"
+    return Pane.fetch(_tmux('display-message','-p','#{pane_id}'))
