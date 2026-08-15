@@ -1,4 +1,4 @@
-"""Live handles for tmux sessions, windows, and panes, plus named background sessions driven by sid. Use this when code needs to read terminal screens or scrollback, drive interactive processes, build pane layouts, search text across terminals, or keep a persistent terminal session that both an agent and the user can inspect and drive.
+"""Work with tmux sessions, windows, and panes from Python, plus named background sessions keyed by sid. Use this when code needs to read what is on a terminal, send input to an interactive program, build pane layouts, search text across terminals, or keep a terminal open that you and the user can both see.
 
 fastmux shells out to the `tmux` binary and keys every object on its server-unique tmux id (`$1`, `@1`, `%1`), so handles stay valid however sessions get renamed or windows renumbered. A handle is a dict of the fields tmux reports (`p.width`, `p.cmd`, `p.dead`), `refresh()` re-queries it in place, and any failed tmux command raises `TmuxError` carrying tmux's own message.
 
