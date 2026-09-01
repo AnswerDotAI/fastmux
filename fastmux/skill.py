@@ -38,4 +38,10 @@ __all__ = ['tmux', 'new_session', 'current_pane', 'TmuxError', 'Session', 'Windo
            'SESSION_PREFIX', 'start_session', 'pane', 'send', 'send_keys', 'interrupt', 'poll', 'display',
            'close', 'managed_sessions']
 
-allow(start_session, pane, send, send_keys, interrupt, poll, display, close, managed_sessions)
+allow(tmux, current_pane, start_session, pane, send, send_keys, interrupt, poll, display, close, managed_sessions,
+        {
+            Sessions: ['search'],
+            Session: ['refresh', 'windows', 'panes', 'pane', 'search'],
+            Window: ['refresh', 'panes', 'search'],
+            Pane: ['refresh', 'fmt', 'capture', 'text', 'ansi', 'display', 'screen', 'poll', 'wait', 'search'],
+        })
