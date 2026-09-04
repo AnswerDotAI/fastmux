@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs">
+
+<title>fastmux’s source – fastmux</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-b610d46fe94d3e995b67e28f79d8c13e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="fastmux’s source – fastmux">
+<meta property="og:description" content="Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs">
+<meta property="og:site_name" content="fastmux">
+<meta name="twitter:title" content="fastmux’s source – fastmux">
+<meta name="twitter:description" content="Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">fastmux</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./core.html">fastmux’s source</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">fastmux</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">fastmux’s source</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./bg.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Background sessions</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#running-tmux" id="toc-running-tmux" class="nav-link" data-scroll-target="#running-tmux">Running tmux</a></li>
+  <li><a href="#querying-tmux" id="toc-querying-tmux" class="nav-link" data-scroll-target="#querying-tmux">Querying tmux</a></li>
+  <li><a href="#sessions" id="toc-sessions" class="nav-link" data-scroll-target="#sessions">Sessions</a></li>
+  <li><a href="#panes" id="toc-panes" class="nav-link" data-scroll-target="#panes">Panes</a>
+  <ul class="collapse">
+  <li><a href="#the-visible-screen" id="toc-the-visible-screen" class="nav-link" data-scroll-target="#the-visible-screen">The visible screen</a></li>
+  <li><a href="#sending-input" id="toc-sending-input" class="nav-link" data-scroll-target="#sending-input">Sending input</a></li>
+  <li><a href="#mouse-input" id="toc-mouse-input" class="nav-link" data-scroll-target="#mouse-input">Mouse input</a></li>
+  <li><a href="#listing-panes" id="toc-listing-panes" class="nav-link" data-scroll-target="#listing-panes">Listing panes</a></li>
+  </ul></li>
+  <li><a href="#windows" id="toc-windows" class="nav-link" data-scroll-target="#windows">Windows</a></li>
+  <li><a href="#splitting-panes" id="toc-splitting-panes" class="nav-link" data-scroll-target="#splitting-panes">Splitting panes</a></li>
+  <li><a href="#searching" id="toc-searching" class="nav-link" data-scroll-target="#searching">Searching</a></li>
+  <li><a href="#tmux" id="toc-tmux" class="nav-link" data-scroll-target="#tmux">tmux()</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/AnswerDotAI/fastmux/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="core.html.md"><i class="bi bi-file-code"></i>Markdown</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">fastmux’s source</h1>
+</div>
+
+<div>
+  <div class="description">
+    Drive and inspect tmux from Python: live session, window, and pane handles with CLI-style reprs
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+</section>
+<section id="running-tmux" class="level2">
+<h2 class="anchored" data-anchor-id="running-tmux">Running tmux</h2>
+<p>Everything fastmux does happens by shelling out to the <a href="./core.html#tmux"><code>tmux</code></a> binary, which is the one true API to a tmux server. The foundation is a small runner that executes one tmux command and either returns its stdout or raises.</p>
+<div id="99a361ea" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.696693+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.771814+00:00&quot;,&quot;total&quot;:0.07512662199997067}}" data-execution_count="4">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L16" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="tmuxerror" class="level3">
+<h3 class="anchored" data-anchor-id="tmuxerror">TmuxError</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> TmuxError(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Raised when a tmux command fails or a target cannot be resolved.</em></p>
+</section>
+</div>
+<p><a href="./core.html#_tmux"><code>_tmux</code></a> takes the command as separate arguments (no shell involved), passes optional <code>input</code> on stdin (used later for loading paste buffers), and strips the trailing newline tmux prints. Any failure becomes a <a href="./core.html#tmuxerror"><code>TmuxError</code></a> carrying tmux’s own message. <code>tmux -V</code> needs no running server, so it makes a good first check:</p>
+<div id="c4575c32" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ver <span class="op">=</span> _tmux(<span class="st">'-V'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ver</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>'tmux 3.7b'</code></pre>
+</div>
+</div>
+<div id="42b3886f" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_eq(ver.startswith(<span class="st">'tmux'</span>), <span class="va">True</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(TmuxError, contains<span class="op">=</span><span class="st">'fastmux-empty'</span>): _tmux(<span class="st">'-L'</span>,<span class="st">'fastmux-empty'</span>,<span class="st">'ls'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="querying-tmux" class="level2">
+<h2 class="anchored" data-anchor-id="querying-tmux">Querying tmux</h2>
+<p>tmux answers questions through <a href="https://man.openbsd.org/tmux#FORMATS">format strings</a>: every <code>list-*</code> and <code>display-message</code> command takes <code>-F</code> with <code>#{variable}</code> placeholders. So fastmux describes each concept once, as a mapping of field name to format variable, and parses the tab-separated answer into a typed <code>dict</code>.</p>
+<p>Sessions, windows, and panes all have server-unique ids (<code>$1</code>, <code>@1</code>, <code>%1</code>) which never change or get reused. Names and indexes are ambiguous as <code>-t</code> targets (a session auto-named <code>5</code> can resolve as a window index!), so fastmux keys every object on its id and only ever targets ids internally.</p>
+<p>A field spec is used twice: <a href="./core.html#_fmt"><code>_fmt</code></a> renders it as the <code>-F</code> argument, and <a href="./core.html#_parse"><code>_parse</code></a> types the reply. The pane title comes last since it is the one field that may itself contain tabs. <code>scroll_position</code> is blank except in copy-mode, so <code>scroll_pos</code> types as int-or-None rather than int. Some tmux versions report an unknown <code>-t</code> target as success with every field empty rather than as an error, so <a href="./core.html#_get"><code>_get</code></a> turns that reply into the <a href="./core.html#tmuxerror"><code>TmuxError</code></a> it should have been.</p>
+<div id="a3239fef" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>test_eq(_fmt(<span class="bu">dict</span>(<span class="bu">id</span><span class="op">=</span><span class="st">'pane_id'</span>, w<span class="op">=</span><span class="st">'pane_width'</span>)), <span class="st">'#</span><span class="sc">{pane_id}</span><span class="ch">\t</span><span class="st">#</span><span class="sc">{pane_width}</span><span class="st">'</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>test_eq(_parse(<span class="bu">dict</span>(<span class="bu">id</span><span class="op">=</span><span class="st">'pane_id'</span>, width<span class="op">=</span><span class="st">'pane_width'</span>, active<span class="op">=</span><span class="st">'pane_active'</span>), <span class="st">'%3</span><span class="ch">\t</span><span class="st">80</span><span class="ch">\t</span><span class="st">1'</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">dict</span>(<span class="bu">id</span><span class="op">=</span><span class="st">'%3'</span>, width<span class="op">=</span><span class="dv">80</span>, active<span class="op">=</span><span class="va">True</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="sessions" class="level2">
+<h2 class="anchored" data-anchor-id="sessions">Sessions</h2>
+<p>A <em>session</em> is tmux’s top-level unit: a named group of windows with its own lifecycle, which clients attach to. All fastmux objects follow the same pattern: an <code>AttrDict</code> holding the fields queried from tmux, a <code>fetch</code> classmethod that builds one from any target, and <code>refresh</code> to re-query in place. The repr matches what <code>tmux ls</code> prints.</p>
+<div id="d878bcd5" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.777300+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.780870+00:00&quot;,&quot;total&quot;:0.0035734090000119068}}" data-execution_count="7">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L63" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="new_session" class="level3">
+<h3 class="anchored" data-anchor-id="new_session">new_session</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> new_session(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    name:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Session name; default: tmux auto-numbers</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    width:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Terminal width in columns</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    height:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Terminal height in rows</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    remain:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Keep dead panes around (inspectable, with exit status) instead of destroying them</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Start a detached tmux session and return its <a href="./core.html#session"><code>Session</code></a></em></p>
+</section>
+</div>
+<div id="b699840e" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.780964+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.783254+00:00&quot;,&quot;total&quot;:0.0022927810000510362}}" data-execution_count="8">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L53" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session" class="level3">
+<h3 class="anchored" data-anchor-id="session">Session</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Session(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>A tmux session; fields from <code>_sess_f</code>, keyed on the immutable session id</em></p>
+</section>
+</div>
+<p>Sessions are created detached (<code>-d</code>), so making one never steals the terminal you are working in. We’ll create one now running a small script that prints numbered lines then waits. It will be the playground for the rest of this notebook.</p>
+<div id="994886b6" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>printer <span class="op">=</span> [sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,<span class="st">'import time</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">'for i in range(30): print(f"ln </span><span class="sc">{i}</span><span class="st">")</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">'time.sleep(600)'</span>]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> new_session(printer, width<span class="op">=</span><span class="dv">80</span>, height<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>s</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dv">0</span>: <span class="dv">1</span> windows</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="f92b842c" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> s.<span class="bu">id</span>.startswith(<span class="st">'$'</span>) <span class="kw">and</span> s.n_wins<span class="op">==</span><span class="dv">1</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>test_eq(s.refresh().<span class="bu">id</span>, s.<span class="bu">id</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="77ece229" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.784944+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.787272+00:00&quot;,&quot;total&quot;:0.0023305180000079417}}" data-execution_count="10">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L98" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.attach_command" class="level3">
+<h3 class="anchored" data-anchor-id="session.attach_command">Session.attach_command</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> attach_command():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Shell command that attaches a terminal to this session</em></p>
+</section>
+</div>
+<div id="01654fe9" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.787361+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.789717+00:00&quot;,&quot;total&quot;:0.0023595409999757067}}" data-execution_count="11">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L92" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.rename" class="level3">
+<h3 class="anchored" data-anchor-id="session.rename">Session.rename</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rename(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    name</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Rename this session, returning it</em></p>
+</section>
+</div>
+<div id="87cd419a" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.789808+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.792128+00:00&quot;,&quot;total&quot;:0.002323817999979383}}" data-execution_count="12">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L86" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.kill" class="level3">
+<h3 class="anchored" data-anchor-id="session.kill">Session.kill</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kill():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Kill this session and everything in it</em></p>
+</section>
+</div>
+<p>Destructive operations raise a <code>sys.audit</code> event, so audit-hook based sandboxes can gate them. In-place operations return <code>self</code> for chaining.</p>
+<div id="3bdafac7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>test_eq(s.rename(<span class="st">'fastmux-demo'</span>).name, <span class="st">'fastmux-demo'</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>test_eq(s.attach_command, <span class="st">'tmux attach -t fastmux-demo'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="panes" class="level2">
+<h2 class="anchored" data-anchor-id="panes">Panes</h2>
+<p>A <em>pane</em> is one terminal: a pty running a command, with a visible screen and a scrollback transcript. Everything you can read or type happens in a pane. Because a pane knows its geometry and cursor, we can treat its whole transcript (history plus visible screen) as a list of lines, addressed absolutely from line 0.</p>
+<div id="52a11390" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.793742+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.795951+00:00&quot;,&quot;total&quot;:0.002211439000006976}}" data-execution_count="14">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L103" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane" class="level3">
+<h3 class="anchored" data-anchor-id="pane">Pane</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Pane(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>A tmux pane; fields from <code>_pane_f</code>, keyed on the immutable pane id</em></p>
+</section>
+</div>
+<div id="26d23b98" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> Pane.fetch(s.<span class="bu">id</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>test_eq((p.width, p.height), (<span class="dv">80</span>, <span class="dv">10</span>))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> p.<span class="bu">id</span>.startswith(<span class="st">'%'</span>) <span class="kw">and</span> p.running <span class="kw">and</span> p.exit_code <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(TmuxError, contains<span class="op">=</span><span class="st">"can't find"</span>): Pane.fetch(<span class="st">'%9999'</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>p.target</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>'fastmux-demo:1.1'</code></pre>
+</div>
+</div>
+<p><code>target</code> is the pane’s address in standard tmux syntax (<code>session:window.pane</code>), so it can be pasted into any <code>tmux -t</code> command.</p>
+<p><code>in_mode</code> and <code>scroll_pos</code> report copy-mode state — the one thing <code>capture</code> and <a href="./bg.html#screen"><code>screen</code></a> cannot show, since tmux always captures the underlying pane, never the copy-mode overlay. A driver that sends a wheel gesture asserts arrival with <code>in_mode</code>, and reads how far up the view sits with <code>scroll_pos</code> (lines above the live position; <code>None</code> outside copy-mode). For queries not worth a curated field, <code>fmt</code> evaluates any tmux format string on the pane.</p>
+<div id="08af1e10" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> p.in_mode <span class="kw">and</span> p.scroll_pos <span class="kw">is</span> <span class="va">None</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>_tmux(<span class="st">'copy-mode'</span>,<span class="st">'-t'</span>,p.<span class="bu">id</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> p.refresh().in_mode <span class="kw">and</span> p.scroll_pos <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>_tmux(<span class="st">'send-keys'</span>,<span class="st">'-t'</span>,p.<span class="bu">id</span>,<span class="st">'-X'</span>,<span class="st">'scroll-up'</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>test_eq(p.refresh().scroll_pos, <span class="dv">1</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>_tmux(<span class="st">'send-keys'</span>,<span class="st">'-t'</span>,p.<span class="bu">id</span>,<span class="st">'-X'</span>,<span class="st">'cancel'</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> p.refresh().in_mode</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>test_eq(p.fmt(<span class="st">'#</span><span class="sc">{pane_id}</span><span class="st">'</span>), p.<span class="bu">id</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="26b709c4" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.799289+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.802335+00:00&quot;,&quot;total&quot;:0.00304887000004328}}" data-execution_count="16">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L136" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.capture" class="level3">
+<h3 class="anchored" data-anchor-id="pane.capture">Pane.capture</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> capture(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    start:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, end:NoneType<span class="op">=</span><span class="va">None</span>, ansi:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>A <a href="./core.html#capture"><code>Capture</code></a> of transcript lines <code>start:end</code> (absolute; <code>end=None</code> means up to the cursor)</em></p>
+</section>
+</div>
+<div id="df874454" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.802451+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.804679+00:00&quot;,&quot;total&quot;:0.002230196999960299}}" data-execution_count="17">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L127" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="capture" class="level3">
+<h3 class="anchored" data-anchor-id="capture">Capture</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Capture(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Captured transcript lines plus their absolute range and source pane</em></p>
+</section>
+</div>
+<p>tmux numbers capture lines relative to the top of the visible screen (scrollback is negative), so <code>capture</code> converts from absolute transcript lines. The <a href="./core.html#capture"><code>Capture</code></a> repr is the text itself with a source footer:</p>
+<div id="e433c58b" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>time.sleep(<span class="fl">0.5</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>c <span class="op">=</span> p.capture(<span class="dv">5</span>, <span class="dv">8</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>c</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">5</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">6</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">7</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>── fastmux<span class="op">-</span>demo:<span class="fl">1.1</span> <span class="op">%</span><span class="dv">0</span> · lines <span class="dv">5</span><span class="op">-</span><span class="dv">8</span> of <span class="dv">30</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="189535b7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>test_eq(c.lines, (<span class="st">'ln 5'</span>,<span class="st">'ln 6'</span>,<span class="st">'ln 7'</span>))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>test_eq((c.start, c.end, c.n), (<span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">30</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>test_eq(p.capture(<span class="dv">29</span>, <span class="dv">99</span>).lines, (<span class="st">'ln 29'</span>,))  <span class="co"># ranges are clamped</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="85ae6f9e" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.806423+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.808756+00:00&quot;,&quot;total&quot;:0.0023358159999702366}}" data-execution_count="19">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L160" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.__repr__" class="level3">
+<h3 class="anchored" data-anchor-id="pane.__repr__">Pane.__repr__</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">__repr__</span>():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Return repr(self).</em></p>
+</section>
+</div>
+<div id="3405c40c" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.808848+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.811141+00:00&quot;,&quot;total&quot;:0.002295025000023543}}" data-execution_count="20">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L155" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.ansi" class="level3">
+<h3 class="anchored" data-anchor-id="pane.ansi">Pane.ansi</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ansi():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>The visible screen with ANSI escape sequences</em></p>
+</section>
+</div>
+<div id="f6f097fa" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.811229+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.814221+00:00&quot;,&quot;total&quot;:0.002994928000020991}}" data-execution_count="21">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L150" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.text" class="level3">
+<h3 class="anchored" data-anchor-id="pane.text">Pane.text</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> text():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>The visible screen as plain text</em></p>
+</section>
+</div>
+<p>A pane’s repr is its current screen, so displaying one is like glancing at that terminal:</p>
+<div id="213333a8" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>p</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">21</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">22</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">23</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">24</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">25</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">26</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">27</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">28</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>ln <span class="dv">29</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="82e5bc00" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.816498+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.819129+00:00&quot;,&quot;total&quot;:0.002633613999989848}}" data-execution_count="23">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L187" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.display" class="level3">
+<h3 class="anchored" data-anchor-id="pane.display">Pane.display</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> display(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    lines:<span class="bu">int</span><span class="op">=</span><span class="dv">80</span>, ansi:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Capture the last <code>lines</code> transcript lines, recording the pane’s last-seen state</em></p>
+</section>
+</div>
+<div id="7da9955c" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.819219+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.822650+00:00&quot;,&quot;total&quot;:0.0034335089999899537}}" data-execution_count="24">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L172" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.__getitem__" class="level3">
+<h3 class="anchored" data-anchor-id="pane.__getitem__">Pane.__getitem__</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">__getitem__</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    i</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Transcript line <code>i</code> as a str, a <a href="./core.html#capture"><code>Capture</code></a> for a slice; str keys keep normal dict access</em></p>
+</section>
+</div>
+<div id="56c19571" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.822740+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.825090+00:00&quot;,&quot;total&quot;:0.0023526009999841335}}" data-execution_count="25">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L169" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.__len__" class="level3">
+<h3 class="anchored" data-anchor-id="pane.__len__">Pane.__len__</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">__len__</span>():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Return len(self).</em></p>
+</section>
+</div>
+<p>Indexing and slicing read the transcript like a list of lines, in the same coordinates tmux itself uses, so <code>p[-200:]</code> is the last 200 lines including scrollback. Since <a href="./core.html#pane"><code>Pane</code></a> is a dict underneath, string keys still do dict lookup (<code>p['id']</code>), while ints and slices read the transcript.</p>
+<div id="6e8db680" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>test_eq(<span class="bu">len</span>(p), <span class="dv">30</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>test_eq((p[<span class="dv">0</span>], p[<span class="op">-</span><span class="dv">1</span>]), (<span class="st">'ln 0'</span>, <span class="st">'ln 29'</span>))</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>test_eq(p[<span class="dv">5</span>:<span class="dv">7</span>].lines, (<span class="st">'ln 5'</span>,<span class="st">'ln 6'</span>))</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>test_eq(p[<span class="op">-</span><span class="dv">3</span>:].lines, (<span class="st">'ln 27'</span>,<span class="st">'ln 28'</span>,<span class="st">'ln 29'</span>))</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>test_eq(p[<span class="st">'id'</span>], p.<span class="bu">id</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(<span class="pp">IndexError</span>): p[<span class="dv">99</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="the-visible-screen" class="level3">
+<h3 class="anchored" data-anchor-id="the-visible-screen">The visible screen</h3>
+<p><code>capture</code> and <a href="./bg.html#display"><code>display</code></a> read the <em>transcript</em>, which ends at the cursor — right for shell work, wrong for full-screen apps, which park the cursor mid-screen and paint below it (completion menus, status rows). <a href="./bg.html#screen"><code>screen</code></a> captures the visible viewport regardless of cursor position, with geometry and cursor in its footer, and the cursor cell overlaid as ▮ in the repr (the <code>text</code>/<code>lines</code> fields stay unmarked). <code>styles=True</code> keeps the SGR text attributes that carry UI meaning — dim ghost text, reversed selections — while stripping color codes, which in a syntax-highlighting app outnumber everything else.</p>
+<div id="a0814937" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.830127+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.833312+00:00&quot;,&quot;total&quot;:0.0031875679999870954}}" data-execution_count="27">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L232" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.screen" class="level3">
+<h3 class="anchored" data-anchor-id="pane.screen">Pane.screen</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> screen(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    styles:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>A <a href="./core.html#screen"><code>Screen</code></a> of the visible viewport (rows below the cursor included), recording the pane’s last-seen state</em></p>
+</section>
+</div>
+<div id="e879600b" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.833421+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.835856+00:00&quot;,&quot;total&quot;:0.002436938000016653}}" data-execution_count="28">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L220" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="screen" class="level3">
+<h3 class="anchored" data-anchor-id="screen">Screen</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Screen(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>The visible screen plus geometry, cursor position, and source pane</em></p>
+</section>
+</div>
+<div id="363372d1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>tui <span class="op">=</span> new_session([sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>       <span class="st">"import time</span><span class="ch">\n</span><span class="st">print('</span><span class="ch">\x1b</span><span class="st">[32mdoc</span><span class="ch">\x1b</span><span class="st">[0m')</span><span class="ch">\n</span><span class="st">print('</span><span class="ch">\x1b</span><span class="st">[2mmenu</span><span class="ch">\x1b</span><span class="st">[0m</span><span class="ch">\x1b</span><span class="st">[F', end='', flush=True)</span><span class="ch">\n</span><span class="st">time.sleep(60)"</span>],</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>       width<span class="op">=</span><span class="dv">30</span>, height<span class="op">=</span><span class="dv">6</span>)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>time.sleep(<span class="fl">0.5</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>tp <span class="op">=</span> Pane.fetch(tui.<span class="bu">id</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'menu'</span> <span class="kw">not</span> <span class="kw">in</span> tp.display().text  <span class="co"># the transcript stops at the cursor: the menu row is below it</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>tp.screen(styles<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="875712e7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>sc <span class="op">=</span> tp.screen(styles<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>test_eq((sc.lines, sc.cx, sc.cy), ((<span class="st">'doc'</span>, <span class="st">'</span><span class="ch">\x1b</span><span class="st">[2mmenu</span><span class="ch">\x1b</span><span class="st">[0m'</span>), <span class="dv">0</span>, <span class="dv">0</span>))  <span class="co"># color stripped, attrs kept, cursor parked up</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>test_eq(_quiet(<span class="st">'</span><span class="ch">\x1b</span><span class="st">[1;32mdoc</span><span class="ch">\x1b</span><span class="st">[0m </span><span class="ch">\x1b</span><span class="st">[38;5;208mx</span><span class="ch">\x1b</span><span class="st">[39m'</span>), <span class="st">'</span><span class="ch">\x1b</span><span class="st">[1mdoc</span><span class="ch">\x1b</span><span class="st">[0m x'</span>)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>tui.kill()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="sending-input" class="level3">
+<h3 class="anchored" data-anchor-id="sending-input">Sending input</h3>
+<p>fastmux writes to a pane two ways: <a href="./bg.html#send"><code>send</code></a> pastes literal text through a tmux buffer (no key-name interpretation, so any characters are safe), and <a href="./bg.html#send_keys"><code>send_keys</code></a> sends <a href="https://man.openbsd.org/tmux#KEY_BINDINGS">tmux key names</a> like <code>Enter</code> or <code>C-c</code>. Both then <a href="./bg.html#poll"><code>poll</code></a>, waiting up to <code>wait_ms</code> for the pane to differ from its last-seen state and returning the latest <a href="./core.html#capture"><code>Capture</code></a>, so the common send-then-read round trip is one call.</p>
+<div id="507fc855" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.839942+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.845364+00:00&quot;,&quot;total&quot;:0.005424696000034146}}" data-execution_count="30">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L250" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.poll" class="level3">
+<h3 class="anchored" data-anchor-id="pane.poll">Pane.poll</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> poll(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    wait_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, interval_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">50</span>, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">80</span>, screen:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, styles:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, until:NoneType<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    settle_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Wait up to <code>wait_ms</code> for the pane to differ from its last-seen state (returning at once if it</em> already does) – or, with <code>until</code>, for the capture to match that regex instead. With <code>settle_ms</code>, then keep sampling until the pane has stopped changing for that long (running at most <code>settle_ms</code> past the deadline). On timeout the latest capture is returned regardless. Capture is the last <code>lines</code> of transcript, or the viewport with <code>screen=True</code>.</p>
+</section>
+</div>
+<p>Let’s drive a stdin-echo process end to end, sending text and getting the acknowledgement back in the same call:</p>
+<div id="74f6ca98" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>echoer <span class="op">=</span> new_session([sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"import sys</span><span class="ch">\n</span><span class="st">"</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"print('ready')</span><span class="ch">\n</span><span class="st">"</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"for l in sys.stdin: print(f'ACK:{l.rstrip()}')"</span>],</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>                      width<span class="op">=</span><span class="dv">60</span>, height<span class="op">=</span><span class="dv">8</span>, remain<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>ep <span class="op">=</span> Pane.fetch(echoer.<span class="bu">id</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>ep.poll(wait_ms<span class="op">=</span><span class="dv">1500</span>, lines<span class="op">=</span><span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>ready</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>── <span class="dv">1</span>:<span class="fl">1.1</span> <span class="op">%</span><span class="dv">1</span> · lines <span class="dv">0</span><span class="op">-</span><span class="dv">1</span> of <span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="d9c00b90" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.849134+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.852558+00:00&quot;,&quot;total&quot;:0.003427853999994568}}" data-execution_count="32">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L299" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.wait" class="level3">
+<h3 class="anchored" data-anchor-id="pane.wait">Pane.wait</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> wait(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    timeout_ms:NoneType<span class="op">=</span><span class="va">None</span>, interval_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">50</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Wait for this pane’s command to exit, returning its status (<code>None</code> on timeout)</em></p>
+</section>
+</div>
+<div id="89a8a485" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.852688+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.855723+00:00&quot;,&quot;total&quot;:0.003037821999953394}}" data-execution_count="33">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L293" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.interrupt" class="level3">
+<h3 class="anchored" data-anchor-id="pane.interrupt">Pane.interrupt</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> interrupt(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    wait_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, interval_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">50</span>, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">80</span>, screen:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, styles:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, until:NoneType<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    settle_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Send <code>Ctrl-C</code> to this pane, then <a href="./bg.html#poll"><code>poll</code></a></em></p>
+</section>
+</div>
+<div id="98d549f5" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.855818+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.859737+00:00&quot;,&quot;total&quot;:0.003921613000045454}}" data-execution_count="34">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L287" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.send_keys" class="level3">
+<h3 class="anchored" data-anchor-id="pane.send_keys">Pane.send_keys</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> send_keys(</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>keys, wait_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, interval_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">50</span>, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">80</span>, screen:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, styles:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    until:NoneType<span class="op">=</span><span class="va">None</span>, settle_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Send tmux key names to this pane, then <a href="./bg.html#poll"><code>poll</code></a></em></p>
+</section>
+</div>
+<div id="59882d39" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.859824+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.864356+00:00&quot;,&quot;total&quot;:0.004535106000048472}}" data-execution_count="35">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L274" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.send" class="level3">
+<h3 class="anchored" data-anchor-id="pane.send">Pane.send</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> send(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    chars:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, wait_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, interval_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">50</span>, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">80</span>, screen:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, styles:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    until:NoneType<span class="op">=</span><span class="va">None</span>, settle_ms:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Paste <code>chars</code> into this pane literally, then <a href="./bg.html#poll"><code>poll</code></a></em></p>
+</section>
+</div>
+<div id="35a4c9c2" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> ep.send(<span class="st">'hello</span><span class="ch">\n</span><span class="st">'</span>, wait_ms<span class="op">=</span><span class="dv">1500</span>, lines<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'ACK:hello'</span> <span class="kw">in</span> r.text</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>test_eq(ep.wait(timeout_ms<span class="op">=</span><span class="dv">1</span>), <span class="va">None</span>)  <span class="co"># still running</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>When the process exits, the pane dies but (with <code>remain-on-exit</code> set) stays inspectable, and <code>wait</code> returns the exit status:</p>
+<div id="97b861a7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>ep.send_keys(<span class="st">'C-d'</span>)  <span class="co"># EOF ends the loop</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>test_eq(ep.wait(timeout_ms<span class="op">=</span><span class="dv">3000</span>), <span class="dv">0</span>)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>echoer.kill()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><a href="./bg.html#poll"><code>poll</code></a> doesn’t just wait for the pane to change after the call: it waits for the pane to differ from the <em>last state a capture showed you</em>. Each <a href="./bg.html#display"><code>display</code></a> (and so each <a href="./bg.html#send"><code>send</code></a>, <a href="./bg.html#send_keys"><code>send_keys</code></a>, <a href="./bg.html#interrupt"><code>interrupt</code></a>, and <a href="./bg.html#poll"><code>poll</code></a>, which all return one) records the pane’s last-seen state, and <a href="./bg.html#poll"><code>poll</code></a> returns as soon as the pane differs from it. So output that arrived while you weren’t watching satisfies the next <a href="./bg.html#poll"><code>poll</code></a> immediately, rather than making it wait for yet another change:</p>
+<div id="654b3499" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>late <span class="op">=</span> new_session([sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,<span class="st">'import time</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">'print("early")</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">'time.sleep(2)</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">'print("late")</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">'time.sleep(600)'</span>], width<span class="op">=</span><span class="dv">60</span>, height<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>lp <span class="op">=</span> Pane.fetch(late.<span class="bu">id</span>)</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>c <span class="op">=</span> lp.poll(wait_ms<span class="op">=</span><span class="dv">500</span>)</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'late'</span> <span class="kw">not</span> <span class="kw">in</span> c.text</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>c</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="b0799c1c" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>time.sleep(<span class="fl">2.5</span>)  <span class="co"># "late" arrives while we aren't watching</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>t0 <span class="op">=</span> time.monotonic()<span class="op">;</span> c <span class="op">=</span> lp.poll(wait_ms<span class="op">=</span><span class="dv">5000</span>)<span class="op">;</span> elapsed <span class="op">=</span> time.monotonic()<span class="op">-</span>t0</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>late.kill()</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'late'</span> <span class="kw">in</span> c.text</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> elapsed <span class="op">&lt;</span> <span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Two refinements cover the patterns that plain change-detection gets wrong. <code>until=</code> waits for the capture to <em>match a regex</em> rather than merely differ — the way to wait out a program’s startup before sending it input. <code>settle_ms=</code> waits for the pane to <em>stop</em> changing: <a href="./bg.html#poll"><code>poll</code></a> returns at the first observed change, so a capture during a burst of output shows a half-painted frame; settling returns the frame the burst ended on.</p>
+<div id="52c38ddd" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>staged <span class="op">=</span> new_session([sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,<span class="st">'import time</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'time.sleep(1)</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'print("READY")</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'for i in range(5): print(f"burst </span><span class="sc">{i}</span><span class="st">"); time.sleep(0.15)</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>                     <span class="st">'time.sleep(600)'</span>], width<span class="op">=</span><span class="dv">60</span>, height<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>sp <span class="op">=</span> Pane.fetch(staged.<span class="bu">id</span>)</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>t0 <span class="op">=</span> time.monotonic()<span class="op">;</span> c <span class="op">=</span> sp.poll(wait_ms<span class="op">=</span><span class="dv">5000</span>, until<span class="op">=</span><span class="st">'READY'</span>)<span class="op">;</span> dt <span class="op">=</span> time.monotonic()<span class="op">-</span>t0</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'READY'</span> <span class="kw">in</span> c.text <span class="kw">and</span> dt <span class="op">&lt;</span> <span class="dv">3</span>          <span class="co"># returned on the match, not the deadline</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>c <span class="op">=</span> sp.poll(wait_ms<span class="op">=</span><span class="dv">5000</span>, settle_ms<span class="op">=</span><span class="dv">500</span>)     <span class="co"># the burst is mid-flight now</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>staged.kill()</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="st">'burst 4'</span> <span class="kw">in</span> c.text                   <span class="co"># settled past the whole burst, not the first change</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="mouse-input" class="level3">
+<h3 class="anchored" data-anchor-id="mouse-input">Mouse input</h3>
+<p>Terminal apps that enable SGR mouse reporting receive clicks as escape sequences on stdin, so a synthetic click is just bytes — but composing them by hand means counting screen rows and remembering that a real click is a press <em>and</em> a release (apps see the release; sending only the press masks bugs). <a href="./bg.html#click"><code>click</code></a> does both halves correctly, and can find its own coordinates: pass a 1-based <code>(col,row)</code>, or a string (literal) or compiled regex located on the current screen. <a href="./bg.html#wheel"><code>wheel</code></a> sends scroll events (SGR buttons 64/65).</p>
+<div id="a4f64f6a" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.868287+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.872082+00:00&quot;,&quot;total&quot;:0.0037968560000081197}}" data-execution_count="37">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L326" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.wheel" class="level3">
+<h3 class="anchored" data-anchor-id="pane.wheel">Pane.wheel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> wheel(</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    n:<span class="bu">int</span><span class="op">=</span><span class="dv">3</span>, at:<span class="bu">tuple</span><span class="op">=</span>(<span class="dv">1</span>, <span class="dv">1</span>), <span class="op">**</span>poll_kw</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Send <code>n</code> SGR wheel events (up for positive <code>n</code>, down for negative), then <a href="./bg.html#poll"><code>poll</code></a> with <code>poll_kw</code></em></p>
+</section>
+</div>
+<div id="c1a63d24" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.872162+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.876371+00:00&quot;,&quot;total&quot;:0.004213007000032576}}" data-execution_count="38">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L310" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.click" class="level3">
+<h3 class="anchored" data-anchor-id="pane.click">Pane.click</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> click(</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    target, btn:<span class="bu">int</span><span class="op">=</span><span class="dv">0</span>, <span class="op">**</span>poll_kw</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Send an SGR mouse click (press+release) to this pane’s application, then <a href="./bg.html#poll"><code>poll</code></a> with <code>poll_kw</code>.</em> <code>target</code> is a 1-based <code>(col,row)</code>, or a str (literal) or compiled regex located on the current screen – the click lands on the bottom-most match’s first cell (screens grow downward: the newest occurrence is the live one). Raises <code>ValueError</code> if it is not on screen.</p>
+</section>
+</div>
+<div id="89bcfa30" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>peek <span class="op">=</span> new_session([sys.executable,<span class="st">'-u'</span>,<span class="st">'-c'</span>,</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"import sys, tty; tty.setcbreak(0)</span><span class="ch">\n</span><span class="st">"</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"print('alpha [beta] gamma')</span><span class="ch">\n</span><span class="st">"</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"while True: print(repr(sys.stdin.buffer.read1(64)))"</span>],</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>                   width<span class="op">=</span><span class="dv">60</span>, height<span class="op">=</span><span class="dv">12</span>, remain<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>pk <span class="op">=</span> Pane.fetch(peek.<span class="bu">id</span>)</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> pk.click((<span class="dv">5</span>, <span class="dv">2</span>), wait_ms<span class="op">=</span><span class="dv">2000</span>)</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="vs">r"</span><span class="ch">\x1b</span><span class="pp">[&lt;0;5;2M</span><span class="ch">\x1b</span><span class="pp">[&lt;0;5;2m</span><span class="vs">"</span> <span class="kw">in</span> r.text        <span class="co"># press and release, at the given cell</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> pk.click(<span class="st">'[beta]'</span>, wait_ms<span class="op">=</span><span class="dv">2000</span>)                <span class="co"># a literal str: regex chars are no trap</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="vs">r"</span><span class="ch">\x1b</span><span class="pp">[&lt;0;7;1M</span><span class="vs">"</span> <span class="kw">in</span> r.text                    <span class="co"># found on row 1, col 7</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> pk.click(re.<span class="bu">compile</span>(<span class="vs">r'gam</span><span class="op">+</span><span class="vs">a'</span>), wait_ms<span class="op">=</span><span class="dv">2000</span>)</span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="vs">r"</span><span class="ch">\x1b</span><span class="pp">[&lt;0;14;1M</span><span class="vs">"</span> <span class="kw">in</span> r.text</span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> pk.wheel(<span class="dv">2</span>, wait_ms<span class="op">=</span><span class="dv">2000</span>)</span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> r.text.count(<span class="vs">r"</span><span class="ch">\x1b</span><span class="pp">[&lt;64;1;1M</span><span class="vs">"</span>) <span class="op">&gt;=</span> <span class="dv">1</span> <span class="kw">and</span> <span class="st">'65;'</span> <span class="kw">not</span> <span class="kw">in</span> r.text</span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(<span class="pp">ValueError</span>, contains<span class="op">=</span><span class="st">'not on screen'</span>): pk.click(<span class="st">'nope'</span>)</span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a>peek.kill()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="listing-panes" class="level3">
+<h3 class="anchored" data-anchor-id="listing-panes">Listing panes</h3>
+<div id="f230b0a7" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.878821+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.881095+00:00&quot;,&quot;total&quot;:0.002277618999983133}}" data-execution_count="40">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L348" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.pane" class="level3">
+<h3 class="anchored" data-anchor-id="session.pane">Session.pane</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pane():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>This session’s active pane</em></p>
+</section>
+</div>
+<div id="2d20f144" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.881184+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.883530+00:00&quot;,&quot;total&quot;:0.0023491359999638917}}" data-execution_count="41">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L343" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.panes" class="level3">
+<h3 class="anchored" data-anchor-id="session.panes">Session.panes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> panes():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>All panes in this session</em></p>
+</section>
+</div>
+<div id="103d5cc4" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.883617+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.886271+00:00&quot;,&quot;total&quot;:0.002657179999971504}}" data-execution_count="42">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L337" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="panes-1" class="level3">
+<h3 class="anchored" data-anchor-id="panes-1">Panes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Panes(</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    items:NoneType<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>rest, use_list:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, match:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Panes shown as <code>tmux list-panes</code>-style summary lines</em></p>
+</section>
+</div>
+<p>A <a href="./core.html#panes"><code>Panes</code></a> collection reprs as summary lines rather than screens (a dozen full screens would be unreadable). The line format mirrors <code>tmux list-panes</code>, with the pane title appended when it carries information (tmux defaults it to the hostname, which doesn’t):</p>
+<div id="a5f0ecd1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>s.panes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>1.1: [80x10] %0 python (active)</code></pre>
+</div>
+</div>
+<div id="6a19db13" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>test_eq(<span class="bu">len</span>(s.panes), <span class="dv">1</span>)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>test_eq(s.pane.<span class="bu">id</span>, p.<span class="bu">id</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="windows" class="level2">
+<h2 class="anchored" data-anchor-id="windows">Windows</h2>
+<p>A <em>window</em> groups panes into one screenful, like tabs in a terminal emulator. Its repr is its <code>tmux list-windows</code>-style summary line followed by its panes.</p>
+<div id="0aad9cd2" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.889977+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.893126+00:00&quot;,&quot;total&quot;:0.003151663999972243}}" data-execution_count="44">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L378" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.new_window" class="level3">
+<h3 class="anchored" data-anchor-id="session.new_window">Session.new_window</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> new_window(</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    name:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Window name; default: tmux auto-names from the command</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    remain:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Keep dead panes around instead of destroying them</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make it the session's current window</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Create a window in this session, returning the new <a href="./core.html#window"><code>Window</code></a></em></p>
+</section>
+</div>
+<div id="29219694" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.893221+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.895575+00:00&quot;,&quot;total&quot;:0.002357468000013796}}" data-execution_count="45">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L373" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.windows" class="level3">
+<h3 class="anchored" data-anchor-id="session.windows">Session.windows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> windows():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>This session’s windows</em></p>
+</section>
+</div>
+<div id="0fc0b627" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.895661+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.898184+00:00&quot;,&quot;total&quot;:0.0025254810000205907}}" data-execution_count="46">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L367" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="windows-1" class="level3">
+<h3 class="anchored" data-anchor-id="windows-1">Windows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Windows(</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    items:NoneType<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>rest, use_list:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, match:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Windows shown with their pane listings</em></p>
+</section>
+</div>
+<div id="dd9653e9" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.898270+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.900506+00:00&quot;,&quot;total&quot;:0.002238488999978472}}" data-execution_count="47">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L353" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window" class="level3">
+<h3 class="anchored" data-anchor-id="window">Window</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Window(</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>A tmux window; fields from <code>_win_f</code>, keyed on the immutable window id</em></p>
+</section>
+</div>
+<p>Like sessions, windows are created without stealing focus unless you pass <code>focus=True</code>, since a script composing a layout shouldn’t yank the user’s cursor around. (<code>remain</code> is a per-window setting; panes made by splitting inherit it from their window.)</p>
+<div id="403223a9" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> s.new_window(printer, name<span class="op">=</span><span class="st">'work'</span>)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>test_eq((w.name, w.n_panes), (<span class="st">'work'</span>, <span class="dv">1</span>))</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>test_eq(s.refresh().n_wins, <span class="dv">2</span>)</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> w.active  <span class="co"># focus stayed put</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>w</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span>: work (<span class="dv">1</span> panes) <span class="op">@</span><span class="dv">2</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">2.1</span>: [<span class="dv">80</span><span class="er">x10</span>] <span class="op">%</span><span class="dv">2</span> tmux (active)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="bdb9e158" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.902603+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.904942+00:00&quot;,&quot;total&quot;:0.0023424760000239075}}" data-execution_count="49">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L427" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.layout" class="level3">
+<h3 class="anchored" data-anchor-id="window.layout">Window.layout</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> layout(</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    name</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Apply a tmux layout (<code>even-horizontal</code>, <code>tiled</code>, …), returning this window</em></p>
+</section>
+</div>
+<div id="53e01a98" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.905030+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.907295+00:00&quot;,&quot;total&quot;:0.002268455000034919}}" data-execution_count="50">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L421" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.select" class="level3">
+<h3 class="anchored" data-anchor-id="window.select">Window.select</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> select():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Make this the session’s current window, returning it</em></p>
+</section>
+</div>
+<div id="b82f9a6d" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.907384+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.909728+00:00&quot;,&quot;total&quot;:0.002346701999954348}}" data-execution_count="51">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L415" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.rename" class="level3">
+<h3 class="anchored" data-anchor-id="window.rename">Window.rename</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rename(</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    name</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Rename this window, returning it</em></p>
+</section>
+</div>
+<div id="dc4506c9" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.909817+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.912359+00:00&quot;,&quot;total&quot;:0.002545562000022983}}" data-execution_count="52">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L406" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.resize" class="level3">
+<h3 class="anchored" data-anchor-id="window.resize">Window.resize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> resize(</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    width:NoneType<span class="op">=</span><span class="va">None</span>, height:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Resize this window (and so its panes) to absolute <code>width</code>/<code>height</code>, returning it (tmux &gt;= 2.9)</em></p>
+</section>
+</div>
+<div id="8bf9be6b" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.912477+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.914788+00:00&quot;,&quot;total&quot;:0.002313773000025776}}" data-execution_count="53">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L400" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.kill" class="level3">
+<h3 class="anchored" data-anchor-id="window.kill">Window.kill</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kill():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Kill this window and its panes</em></p>
+</section>
+</div>
+<div id="8d3c411e" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>test_eq(w.rename(<span class="st">'jobs'</span>).name, <span class="st">'jobs'</span>)</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> w.select().active</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><a href="./core.html#window.resize"><code>Window.resize</code></a> is the resize that works in a detached single-pane session. <a href="./core.html#pane.resize"><code>Pane.resize</code></a> is clamped by the window geometry there, so it silently no-ops; resizing the window reaches the pane and delivers its SIGWINCH, which is what you want when driving a full-screen app headlessly and testing its resize behavior. Panes also carry their process <code>pid</code>, the handle for inspecting a stuck session’s process from outside.</p>
+<div id="9938ec40" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>ow, oh <span class="op">=</span> w.panes[<span class="dv">0</span>].width, w.panes[<span class="dv">0</span>].height</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>test_eq(w.resize(<span class="dv">70</span>, <span class="dv">20</span>).panes[<span class="dv">0</span>].width, <span class="dv">70</span>)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> w.panes[<span class="dv">0</span>].pid <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>w.resize(ow, oh)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="splitting-panes" class="level2">
+<h2 class="anchored" data-anchor-id="splitting-panes">Splitting panes</h2>
+<p>Splitting divides a pane in two, and is how layouts get built. tmux’s own flags are famously backwards (<code>-h</code> puts panes side by side; <code>-v</code> stacks them), so fastmux speaks in directions instead: where the <em>new</em> pane goes, <code>right</code>/<code>below</code>/<code>left</code>/<code>above</code>, with a one-word verb for each. Like window creation, splits never steal focus unless asked.</p>
+<div id="99d4a3ea" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.919592+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.922845+00:00&quot;,&quot;total&quot;:0.0032555509999951937}}" data-execution_count="55">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L465" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.asplit" class="level3">
+<h3 class="anchored" data-anchor-id="pane.asplit">Pane.asplit</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> asplit(</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    size:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Size of the new pane: rows/columns (int) or `'30%'`</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make the new pane active</span></span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Split this pane, returning the new <a href="./core.html#pane"><code>Pane</code></a></em></p>
+</section>
+</div>
+<div id="f5a6fbd1" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.922936+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.926161+00:00&quot;,&quot;total&quot;:0.0032273280000367777}}" data-execution_count="56">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L462" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.lsplit" class="level3">
+<h3 class="anchored" data-anchor-id="pane.lsplit">Pane.lsplit</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lsplit(</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    size:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Size of the new pane: rows/columns (int) or `'30%'`</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make the new pane active</span></span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Split this pane, returning the new <a href="./core.html#pane"><code>Pane</code></a></em></p>
+</section>
+</div>
+<div id="fb8b86a1" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.926254+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.929481+00:00&quot;,&quot;total&quot;:0.0032295720000092842}}" data-execution_count="57">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L459" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.bsplit" class="level3">
+<h3 class="anchored" data-anchor-id="pane.bsplit">Pane.bsplit</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bsplit(</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    size:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Size of the new pane: rows/columns (int) or `'30%'`</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make the new pane active</span></span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Split this pane, returning the new <a href="./core.html#pane"><code>Pane</code></a></em></p>
+</section>
+</div>
+<div id="eaa27510" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.929574+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.932811+00:00&quot;,&quot;total&quot;:0.0032402969999907327}}" data-execution_count="58">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L456" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.rsplit" class="level3">
+<h3 class="anchored" data-anchor-id="pane.rsplit">Pane.rsplit</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rsplit(</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    size:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Size of the new pane: rows/columns (int) or `'30%'`</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make the new pane active</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Split this pane, returning the new <a href="./core.html#pane"><code>Pane</code></a></em></p>
+</section>
+</div>
+<div id="d8ac106d" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.932907+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.935967+00:00&quot;,&quot;total&quot;:0.0030635319999987587}}" data-execution_count="59">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L436" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.split" class="level3">
+<h3 class="anchored" data-anchor-id="pane.split">Pane.split</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> split(</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>    where:<span class="bu">str</span><span class="op">=</span><span class="st">'right'</span>, <span class="co"># Where the new pane goes: `right`, `below`, `left`, or `above`</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>    cmd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Command to run (str or argv list); default: the user's shell</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>    size:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Size of the new pane: rows/columns (int) or `'30%'`</span></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>    cwd:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Working directory</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>    env:NoneType<span class="op">=</span><span class="va">None</span>, <span class="co"># Extra environment vars as a dict</span></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>    focus:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, <span class="co"># Make the new pane active</span></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Split this pane, returning the new <a href="./core.html#pane"><code>Pane</code></a></em></p>
+</section>
+</div>
+<div id="45a39539" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>right <span class="op">=</span> p.rsplit()</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>above <span class="op">=</span> p.asplit(size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>test_eq(<span class="bu">len</span>(Window.fetch(p.window_id).panes), <span class="dv">3</span>)</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> above.height<span class="op">==</span><span class="dv">3</span> <span class="kw">and</span> right.<span class="bu">id</span> <span class="op">!=</span> p.<span class="bu">id</span></span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> Pane.fetch(p.window_id).<span class="bu">id</span> <span class="op">==</span> p.<span class="bu">id</span>  <span class="co"># focus in this window untouched</span></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>Window.fetch(p.window_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="prose" data-markdown="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span>: nbs (<span class="dv">3</span> panes) <span class="op">@</span><span class="dv">0</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">1.1</span>: [<span class="dv">40</span><span class="er">x3</span>] <span class="op">%</span><span class="dv">4</span> bash</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>  <span class="fl">1.2</span>: [<span class="dv">40</span><span class="er">x6</span>] <span class="op">%</span><span class="dv">0</span> python (active)</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>  <span class="fl">1.3</span>: [<span class="dv">39</span><span class="er">x10</span>] <span class="op">%</span><span class="dv">3</span> bash</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div id="f4849567" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.937929+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.940226+00:00&quot;,&quot;total&quot;:0.002300021999985802}}" data-execution_count="61">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L490" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.select" class="level3">
+<h3 class="anchored" data-anchor-id="pane.select">Pane.select</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> select():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Make this the active pane, returning it</em></p>
+</section>
+</div>
+<div id="9b85f3ef" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.940314+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.942597+00:00&quot;,&quot;total&quot;:0.002286011000023791}}" data-execution_count="62">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L484" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.zoom" class="level3">
+<h3 class="anchored" data-anchor-id="pane.zoom">Pane.zoom</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> zoom():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Toggle this pane fullscreen within its window, returning it</em></p>
+</section>
+</div>
+<div id="cbafd5d6" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.942685+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.945239+00:00&quot;,&quot;total&quot;:0.00255687899999657}}" data-execution_count="63">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L475" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.resize" class="level3">
+<h3 class="anchored" data-anchor-id="pane.resize">Pane.resize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> resize(</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>    width:NoneType<span class="op">=</span><span class="va">None</span>, height:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Resize this pane to absolute <code>width</code>/<code>height</code>, returning it</em></p>
+</section>
+</div>
+<div id="2cd29265" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.945330+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.947656+00:00&quot;,&quot;total&quot;:0.0023285259999852315}}" data-execution_count="64">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L469" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.kill" class="level3">
+<h3 class="anchored" data-anchor-id="pane.kill">Pane.kill</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kill():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Kill this pane (killing its window/session if it is the last one)</em></p>
+</section>
+</div>
+<div id="28d4705f" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>test_eq(above.resize(height<span class="op">=</span><span class="dv">5</span>).height, <span class="dv">5</span>)</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> right.select().active</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>above.kill()<span class="op">;</span> right.kill()</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>test_eq(<span class="bu">len</span>(Window.fetch(p.window_id).panes), <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="searching" class="level2">
+<h2 class="anchored" data-anchor-id="searching">Searching</h2>
+<p>Any scope can be grepped: one pane’s transcript, every pane in a window or session, or every pane on the server. Matches display rg-style, and each match’s <code>target</code> is a real tmux target, so you can paste it back into <a href="./core.html#tmux"><code>tmux()</code></a> to get the pane that said it.</p>
+<div id="22beaa02" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.961456+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.963946+00:00&quot;,&quot;total&quot;:0.002493512999990344}}" data-execution_count="66">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L531" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="session.search" class="level3">
+<h3 class="anchored" data-anchor-id="session.search">Session.search</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> search(</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>    pattern, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">2000</span>, regex:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, ignore_case:<span class="bu">bool</span><span class="op">=</span><span class="va">True</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Search every pane in this session, rg-style</em></p>
+</section>
+</div>
+<div id="a660dd51" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.964036+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.966496+00:00&quot;,&quot;total&quot;:0.002463177999970867}}" data-execution_count="67">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L526" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="window.search" class="level3">
+<h3 class="anchored" data-anchor-id="window.search">Window.search</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> search(</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>    pattern, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">2000</span>, regex:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, ignore_case:<span class="bu">bool</span><span class="op">=</span><span class="va">True</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Search every pane in this window, rg-style</em></p>
+</section>
+</div>
+<div id="5439a7a4" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.966588+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.969023+00:00&quot;,&quot;total&quot;:0.0024383300000181407}}" data-execution_count="68">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L521" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="pane.search" class="level3">
+<h3 class="anchored" data-anchor-id="pane.search">Pane.search</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> search(</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>    pattern, lines:<span class="bu">int</span><span class="op">=</span><span class="dv">2000</span>, regex:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, ignore_case:<span class="bu">bool</span><span class="op">=</span><span class="va">True</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Search this pane’s recent transcript, rg-style</em></p>
+</section>
+</div>
+<div id="2af1e267" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.969110+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.971650+00:00&quot;,&quot;total&quot;:0.002543319000039901}}" data-execution_count="69">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L503" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="searchresults" class="level3">
+<h3 class="anchored" data-anchor-id="searchresults">SearchResults</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> SearchResults(</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>    items:NoneType<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>rest, use_list:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, match:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Search matches, one rg-style row per line</em></p>
+</section>
+</div>
+<div id="45137d05" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.971739+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.973980+00:00&quot;,&quot;total&quot;:0.0022436979999724826}}" data-execution_count="70">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L498" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="searchmatch" class="level3">
+<h3 class="anchored" data-anchor-id="searchmatch">SearchMatch</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> SearchMatch(</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>args, <span class="op">**</span>kwargs</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>One matching transcript line, shown rg-style</em></p>
+</section>
+</div>
+<div id="b8f3facd" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb88"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>hits <span class="op">=</span> p.search(<span class="st">'ln 2'</span>, lines<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>test_eq(hits[<span class="dv">0</span>].line, <span class="st">'ln 2'</span>)</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>test_eq(<span class="bu">len</span>(hits), <span class="dv">11</span>)  <span class="co"># ln 2 and ln 20..29</span></span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>hits</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>fastmux-demo:1.1:2: ln 2
+fastmux-demo:1.1:20: ln 20
+fastmux-demo:1.1:21: ln 21
+fastmux-demo:1.1:22: ln 22
+fastmux-demo:1.1:23: ln 23
+fastmux-demo:1.1:24: ln 24
+fastmux-demo:1.1:25: ln 25
+fastmux-demo:1.1:26: ln 26
+fastmux-demo:1.1:27: ln 27
+fastmux-demo:1.1:28: ln 28
+fastmux-demo:1.1:29: ln 29</code></pre>
+</div>
+</div>
+<div id="25ed69df" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> hits[<span class="dv">0</span>]</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>test_eq(m.target, p.target)</span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>test_eq(p[m.line_no], m.line)  <span class="co"># line numbers are absolute transcript coordinates</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="tmux" class="level2">
+<h2 class="anchored" data-anchor-id="tmux">tmux()</h2>
+<p><a href="./core.html#tmux"><code>tmux()</code></a> with no arguments returns every session as an indented session/window/pane tree, empty if no server is running at all. With a target it returns the right live handle: a session name or <code>$id</code> gives a <a href="./core.html#session"><code>Session</code></a>, <code>sess:win</code> or <code>@id</code> a <a href="./core.html#window"><code>Window</code></a>, <code>sess:win.pane</code> or <code>%id</code> a <a href="./core.html#pane"><code>Pane</code></a>.</p>
+<div id="893ff546" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.977093+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.979924+00:00&quot;,&quot;total&quot;:0.0028337050000004638}}" data-execution_count="72">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L554" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="tmux-1" class="level3">
+<h3 class="anchored" data-anchor-id="tmux-1">tmux</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tmux(</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>    target:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>All sessions as a tree, or a live handle for <code>target</code> (session name, <code>sess:win</code>, <code>sess:win.pane</code>, or a <code>$</code>/<code>@</code>/<code>%</code> id)</em></p>
+</section>
+</div>
+<div id="fdfdd4db" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.980011+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.982563+00:00&quot;,&quot;total&quot;:0.002555356000016218}}" data-execution_count="73">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L543" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="sessions-1" class="level3">
+<h3 class="anchored" data-anchor-id="sessions-1">Sessions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb92"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> Sessions(</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>    items:NoneType<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>rest, use_list:<span class="bu">bool</span><span class="op">=</span><span class="va">False</span>, match:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Sessions shown as an indented session/window/pane tree</em></p>
+</section>
+</div>
+<div id="d4babc22" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>tmux()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>fastmux-demo: 2 windows
+  1: nbs (1 panes) @0
+    1.1: [80x10] %0 python (active)
+  2: jobs* (1 panes) @2
+    2.1: [80x10] %2 python (active)</code></pre>
+</div>
+</div>
+<div id="3294a6c5" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(s.name).<span class="bu">id</span>, s.<span class="bu">id</span>)</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(s.<span class="bu">id</span>).name, s.name)</span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(p.<span class="bu">id</span>).target, p.target)</span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(p.target).<span class="bu">id</span>, p.<span class="bu">id</span>)          <span class="co"># target strings round-trip</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(p.window_id).idx, p.win)</span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">any</span>(o.<span class="bu">id</span><span class="op">==</span>s.<span class="bu">id</span> <span class="cf">for</span> o <span class="kw">in</span> tmux())</span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(TmuxError): tmux(<span class="st">'no-such-session'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Search for a line, then jump to the pane that printed it:</p>
+<div id="8d1607c9" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>hit <span class="op">=</span> tmux().search(<span class="st">'ln 29'</span>)[<span class="dv">0</span>]</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>test_eq(tmux(hit.target).<span class="bu">id</span>, hit.<span class="bu">id</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>One more query: <a href="./core.html#current_pane"><code>current_pane</code></a> answers “which pane is <em>this</em>?”. Inside tmux it is the caller’s own pane; outside, tmux resolves it to the active pane of the most recently used session. <code>fastmux.bg</code> uses it to give <code>sid=None</code> its meaning.</p>
+<div id="1dc1d144" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-09-04T05:32:23.983777+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-09-04T05:32:23.985982+00:00&quot;,&quot;total&quot;:0.002207703000010497}}" data-execution_count="75">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fastmux/blob/main/fastmux/core.py#L565" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="current_pane" class="level3">
+<h3 class="anchored" data-anchor-id="current_pane">current_pane</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> current_pane():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>The pane tmux considers current: the caller’s own inside tmux, else the active pane of the most recent session</em></p>
+</section>
+</div>
+<div id="971c240d" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> current_pane().<span class="bu">id</span>.startswith(<span class="st">'%'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Finally, clean up the playground:</p>
+<div id="c2bad1bc" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>s.kill()</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> expect_fail(TmuxError, contains<span class="op">=</span><span class="st">"can't find"</span>): tmux(<span class="st">'fastmux-demo'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/AnswerDotAI/fastmux/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
