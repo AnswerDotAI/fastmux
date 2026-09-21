@@ -113,5 +113,4 @@ d = { 'settings': { 'branch': 'main',
                               'fastmux.core._tmux': ('core.html#_tmux', 'fastmux/core.py'),
                               'fastmux.core.current_pane': ('core.html#current_pane', 'fastmux/core.py'),
                               'fastmux.core.new_session': ('core.html#new_session', 'fastmux/core.py'),
-                              'fastmux.core.tmux': ('core.html#tmux', 'fastmux/core.py')},
-            'fastmux.skill': {}}}
+                              'fastmux.core.tmux': ('core.html#tmux', 'fastmux/core.py')}}}
