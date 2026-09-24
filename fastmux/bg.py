@@ -23,7 +23,7 @@ def start_session(
     width=None,  # Terminal width in columns
     height=None, # Terminal height in rows
 ):
-    "The session named `sid`, created detached (managed, with `remain` set) if it doesn't exist"
+    "The session named `sid`, created detached (managed, with `remain` set and the dead-pane banner cleared) if it doesn't exist. `pane(sid)` keeps returning the created pane after splits."
     if sid is None: sid = f'{SESSION_PREFIX}{uuid.uuid4().hex[:10]}'
     try: return tmux(sid)
     except TmuxError: pass

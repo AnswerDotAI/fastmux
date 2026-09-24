@@ -9,6 +9,7 @@ __all__ = ['SEARCH_LINES', 'TmuxError', 'Session', 'new_session', 'Pane', 'Captu
 # %% ../nbs/00_core.ipynb #9cc1145d
 from fastcore.utils import *
 from fastcore.meta import delegates
+from functools import cache
 
 import re, shlex, socket, subprocess, sys, time, uuid
 
@@ -252,7 +253,9 @@ def poll(self:Pane, wait_ms=0, interval_ms=50, lines=80, screen=False, styles=Fa
     already does) -- or, with `until`, for the capture to match that regex instead. With `settle_ms`,
     then keep sampling until the pane has stopped changing for that long (running at most `settle_ms`
     past the deadline). On timeout the latest capture is returned regardless. Capture is the last
-    `lines` of transcript, or the viewport with `screen=True`."""
+    `lines` of transcript, or the viewport with `screen=True`.
+    `until` also matches text already in the capture, and returns within one `interval_ms` of a match.
+    The settle phase lasts at least `settle_ms`, even when the pane is already quiet."""
     deadline = time.monotonic() + wait_ms/1000
     if until is not None:
         while not re.search(until, _snapshot(self, lines, screen)[0]) and time.monotonic() < deadline:
@@ -270,13 +273,19 @@ def poll(self:Pane, wait_ms=0, interval_ms=50, lines=80, screen=False, styles=Fa
     return self.screen(styles) if screen else self.display(lines)
 
 # %% ../nbs/00_core.ipynb #b429cbcd
+@cache
+def _paste_flags():
+    "`paste-buffer` flags for the running tmux server: 3.7+ escapes pasted control characters unless given `-S`, which older versions reject"
+    m = re.match(r'\D*(\d+)\.(\d+)', _tmux('display-message','-p','#{version}'))
+    return ['-S'] if m and (int(m[1]), int(m[2])) >= (3, 7) else []
+
 @patch
 def send(self:Pane, chars='', wait_ms=0, interval_ms=50, lines=80, screen=False, styles=False, until=None, settle_ms=0):
     "Paste `chars` into this pane literally, then `poll`"
     if chars:
         buf = f'fastmux-{uuid.uuid4().hex}'
         _tmux('load-buffer','-b',buf,'-',input=chars)
-        try: _tmux('paste-buffer','-d','-b',buf,'-t',self.id)
+        try: _tmux('paste-buffer',*_paste_flags(),'-d','-b',buf,'-t',self.id)
         except Exception:
             try: _tmux('delete-buffer','-b',buf)
             except TmuxError: pass
@@ -297,7 +306,7 @@ def interrupt(self:Pane, wait_ms=0, interval_ms=50, lines=80, screen=False, styl
 
 @patch
 def wait(self:Pane, timeout_ms=None, interval_ms=50):
-    "Wait for this pane's command to exit, returning its status (`None` on timeout)"
+    "Wait for this pane's command to exit, returning its status (`None` on timeout). The pane needs `remain` to outlive its command."
     deadline = None if timeout_ms is None else time.monotonic() + max(timeout_ms,0)/1000
     while True:
         self.refresh()
@@ -512,25 +521,46 @@ def _matcher(pattern, regex=False, ignore_case=True):
         return lambda l: pattern in l.lower()
     return lambda l: pattern in l
 
-def _search_panes(ps, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
+def _search_panes(
+    ps, # Panes to search
+    pattern, # Substring to find, or a regex with `regex=True`
+    lines=SEARCH_LINES, # Lines of each pane's transcript to search, counting back from the end
+    regex=False, # Treat `pattern` as a regex?
+    ignore_case=True, # Ignore case when matching?
+):
     f = _matcher(pattern, regex, ignore_case)
     return SearchResults(SearchMatch(target=c.target, line_no=c.start+i, line=l, id=c.id)
         for c in (p.display(lines) for p in ps) for i,l in enumerate(c.lines) if f(l))
 
 @patch
-def search(self:Pane, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
+@delegates(_search_panes)
+def search(
+    self:Pane,
+    pattern, # Substring to find, or a regex with `regex=True`
+    **kwargs
+):
     "Search this pane's recent transcript, rg-style"
-    return _search_panes([self], pattern, lines, regex, ignore_case)
+    return _search_panes([self], pattern, **kwargs)
 
 @patch
-def search(self:Window, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
+@delegates(_search_panes)
+def search(
+    self:Window,
+    pattern, # Substring to find, or a regex with `regex=True`
+    **kwargs
+):
     "Search every pane in this window, rg-style"
-    return _search_panes(self.panes, pattern, lines, regex, ignore_case)
+    return _search_panes(self.panes, pattern, **kwargs)
 
 @patch
-def search(self:Session, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
+@delegates(_search_panes)
+def search(
+    self:Session,
+    pattern, # Substring to find, or a regex with `regex=True`
+    **kwargs
+):
     "Search every pane in this session, rg-style"
-    return _search_panes(self.panes, pattern, lines, regex, ignore_case)
+    return _search_panes(self.panes, pattern, **kwargs)
 
 # %% ../nbs/00_core.ipynb #387659f2
 def _list_srv(cmd, fields, *flags):
@@ -547,12 +577,17 @@ class Sessions(L):
         return '\n'.join('\n'.join([repr(o)] + [_ind(w) for w in o.windows]) for o in self)
     def _repr_pretty_(self, p, cycle): p.text(repr(self))
 
-    def search(self, pattern, lines=SEARCH_LINES, regex=False, ignore_case=True):
+    @delegates(_search_panes)
+    def search(
+        self,
+        pattern, # Substring to find, or a regex with `regex=True`
+        **kwargs
+    ):
         "Search every pane in every session, rg-style"
-        return _search_panes([Pane(d) for d in _list_srv('list-panes', _pane_f, '-a')], pattern, lines, regex, ignore_case)
+        return _search_panes([Pane(d) for d in _list_srv('list-panes', _pane_f, '-a')], pattern, **kwargs)
 
 def tmux(target=None):
-    "All sessions as a tree, or a live handle for `target` (session name, `sess:win`, `sess:win.pane`, or a `$`/`@`/`%` id)"
+    "All sessions as a tree (empty if no server is running), or the live handle for `target`: a `Session` for a session name or `$` id, a `Window` for `sess:win` or `@` id, a `Pane` for `sess:win.pane` or `%` id"
     if target is None: return Sessions(Session(d) for d in _list_srv('list-sessions', _sess_f))
     t = str(target)
     if t.startswith('$'): return Session.fetch(t)
